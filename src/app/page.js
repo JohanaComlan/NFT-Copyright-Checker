@@ -1,19 +1,19 @@
-"use client"; 
+"use client";
 import { useState } from "react";
 import { NFTCard } from "./NFTCard";
-
 
 export default function Home() {
   const [searchType, setSearchType] = useState("wallet"); // "wallet" or "collection"
   const [network, setNetwork] = useState("mainnet");
   const [inputValue, setInputValue] = useState("");
   const [NFTs, setNFTs] = useState([]);
+  const [useTokenId, setUseTokenId] = useState(false); // 是否使用 tokenId 查询
+  const [tokenId, setTokenId] = useState(""); // 用户输入的 tokenId
 
   const fetchNFT = async () => {
-    let nfts;
-    const api_key = 'yEVTo2V-shPzg-qzxazhog4MHDX2FxEh';
-    const baseURL = `https://eth-${network}.g.alchemy.com/nft/v3/${api_key}/`;
-    const options = { method: 'GET', headers: { accept: 'application/json' } };
+    let api_key = 'yEVTo2V-shPzg-qzxazhog4MHDX2FxEh';
+    let baseURL = `https://eth-${network}.g.alchemy.com/nft/v3/${api_key}/`;
+    let options = { method: 'GET', headers: { accept: 'application/json' } };
 
     console.log("Fetching NFTs for", searchType, ":", inputValue);
 
@@ -21,7 +21,13 @@ export default function Home() {
     if (searchType === "wallet") {
       fetchURL = `${baseURL}getNFTsForOwner?owner=${inputValue}&withMetadata=true&pageSize=100`;
     } else {
-      fetchURL = `${baseURL}getNFTsForContract?contractAddress=${inputValue}&withMetadata=true`;
+      if (useTokenId && tokenId.trim()) {
+        // 如果用户勾选了 Use Token 并输入了 Token ID
+        fetchURL = `${baseURL}getNFTMetadata?contractAddress=${inputValue}&tokenId=${tokenId}&refreshCache=false`;
+      } else {
+        // 普通 Collection 查询
+        fetchURL = `${baseURL}getNFTsForContract?contractAddress=${inputValue}&withMetadata=true`;
+      }
     }
 
     try {
@@ -30,7 +36,13 @@ export default function Home() {
 
       if (data) {
         console.log("NFTs:", data);
-        setNFTs(searchType === "wallet" ? data.ownedNfts : data.nfts);
+        setNFTs(
+          searchType === "wallet"
+            ? data.ownedNfts
+            : useTokenId && tokenId.trim()
+            ? [data] // 如果是单个 NFT 查询，返回单个对象的数组
+            : data.nfts
+        );
       }
     } catch (error) {
       console.error("Error fetching NFTs:", error);
@@ -41,30 +53,25 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center py-8 gap-y-3">
       {/* 标题区域 */}
       <div className="mt-5 w-2/3 text-center mx-auto">
-        <h1 className="m mx-auto text-4xl font-bold text-gray-800">
-            NFT Copyright Checker 🔍
-        </h1>
-        <p className="mx-auto text-gray-600 text-lg mt-2">
-            Verify & Search for NFT Authenticity in Seconds.
-        </p>
+        <h1 className="text-4xl font-bold text-gray-800">NFT Copyright Checker 🔍</h1>
+        <p className="text-gray-600 text-lg mt-2">Verify & Search for NFT Authenticity in Seconds.</p>
       </div>
 
       {/* 搜索框区域 */}
       <div className="mt-8 flex w-2/3 gap-2 justify-center items-center">
-        
         {/* 下拉菜单 */}
-        <select 
+        <select
           className="border border-gray-300 p-2 rounded-lg shadow-sm text-gray-700 focus:ring-2 focus:ring-blue-400 focus:outline-none cursor-pointer"
-          value={searchType} 
+          value={searchType}
           onChange={(e) => setSearchType(e.target.value)}
         >
-          <option value="wallet">💸Search by Wallet</option>
+          <option value="wallet">💸 Search by Wallet</option>
           <option value="collection">📜 Search by Collection</option>
         </select>
 
-        <select 
+        <select
           className="border border-gray-300 p-2 rounded-lg shadow-sm text-gray-700 focus:ring-2 focus:ring-blue-400 focus:outline-none cursor-pointer"
-          value={network} 
+          value={network}
           onChange={(e) => setNetwork(e.target.value)}
         >
           <option value="mainnet">🌐 Ethereum</option>
@@ -72,8 +79,8 @@ export default function Home() {
         </select>
 
         {/* 动态搜索框 */}
-        <input 
-          type="text" 
+        <input
+          type="text"
           placeholder={searchType === "wallet" ? "Enter Wallet Address" : "Enter Collection Address"}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
@@ -81,11 +88,37 @@ export default function Home() {
         />
       </div>
 
+      {/* Use Token 复选框 + Token ID 输入框 */}
+      {searchType === "collection" && (
+        <div className="flex items-center mt-3 gap-2">
+          <input
+            type="checkbox"
+            id="useTokenId"
+            checked={useTokenId}
+            onChange={(e) => setUseTokenId(e.target.checked)}
+            className="cursor-pointer"
+          />
+          <label htmlFor="useTokenId" className="text-gray-700 text-sm cursor-pointer">
+            Use Token
+          </label>
+          <input
+            type="text"
+            placeholder="Enter Token ID"
+            value={tokenId}
+            onChange={(e) => setTokenId(e.target.value)}
+            className={`border p-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none placeholder-gray-400 ${
+              useTokenId ? "border-gray-300" : "border-gray-200 bg-gray-100 cursor-not-allowed"
+            }`}
+            disabled={!useTokenId}
+          />
+        </div>
+      )}
+
       {/* 搜索按钮 */}
       <button
-        className={`text-white px-4 py-2 mt-3 rounded-md w-1/5 
-          ${inputValue.trim() ? "bg-blue-500 hover:bg-blue-700" : "bg-blue-300"}
-        `}
+        className={`text-white px-4 py-2 mt-3 rounded-md w-1/5 ${
+          inputValue.trim() ? "bg-blue-500 hover:bg-blue-700" : "bg-blue-300"
+        }`}
         onClick={fetchNFT}
         disabled={!inputValue.trim()}
       >
@@ -93,13 +126,11 @@ export default function Home() {
       </button>
 
       {/* NFT 展示区域 */}
-      <div className='flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-5 justify-center'>
+      <div className="flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-5 justify-center">
         {NFTs.length > 0 ? (
-          NFTs
-            .filter(nft => nft.image?.cachedUrl) 
-            .map((nft, index) => (
-              <NFTCard key={index} nft={nft} onTestnet={network === 'sepolia'} />
-            ))
+          NFTs.filter(nft => nft.image?.cachedUrl).map((nft, index) => (
+            <NFTCard key={index} nft={nft} onTestnet={network === "sepolia"} />
+          ))
         ) : (
           <div className="text-center">
             <p className="text-gray-700 text-lg font-semibold">No NFTs found.</p>
@@ -134,23 +165,6 @@ export default function Home() {
           </div>
         )}
       </div>
-
-      {/* 悬浮 Plus 按钮 */}
-      <button 
-        className="fixed bottom-6 right-6 bg-blue-500 shadow-lg p-3 rounded-full hover:bg-blue-600 transition duration-300 hover:scale-110"
-      >
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="32" height="32" 
-          viewBox="0 0 24 24" 
-          fill="white"  // 确保图标是白色
-          className="w-12 h-12"
-        >
-          <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6 13h-5v5h-2v-5h-5v-2h5v-5h2v5h5v2z"/>
-        </svg>
-      </button>
-
-
     </div>
   );
 }
