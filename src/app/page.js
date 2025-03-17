@@ -1,103 +1,156 @@
-import Image from "next/image";
+"use client"; 
+import { useState } from "react";
+import { NFTCard } from "./NFTCard";
+
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [searchType, setSearchType] = useState("wallet"); // "wallet" or "collection"
+  const [network, setNetwork] = useState("mainnet");
+  const [inputValue, setInputValue] = useState("");
+  const [NFTs, setNFTs] = useState([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+  const fetchNFT = async () => {
+    let nfts;
+    const api_key = 'yEVTo2V-shPzg-qzxazhog4MHDX2FxEh';
+    const baseURL = `https://eth-${network}.g.alchemy.com/nft/v3/${api_key}/`;
+    const options = { method: 'GET', headers: { accept: 'application/json' } };
+
+    console.log("Fetching NFTs for", searchType, ":", inputValue);
+
+    let fetchURL;
+    if (searchType === "wallet") {
+      fetchURL = `${baseURL}getNFTsForOwner?owner=${inputValue}&withMetadata=true&pageSize=100`;
+    } else {
+      fetchURL = `${baseURL}getNFTsForContract?contractAddress=${inputValue}&withMetadata=true`;
+    }
+
+    try {
+      const response = await fetch(fetchURL, options);
+      const data = await response.json();
+
+      if (data) {
+        console.log("NFTs:", data);
+        setNFTs(searchType === "wallet" ? data.ownedNfts : data.nfts);
+      }
+    } catch (error) {
+      console.error("Error fetching NFTs:", error);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center py-8 gap-y-3">
+      {/* 标题区域 */}
+      <div className="mt-5 w-2/3 text-center mx-auto">
+        <h1 className="m mx-auto text-4xl font-bold text-gray-800">
+            NFT Copyright Checker 🔍
+        </h1>
+        <p className="mx-auto text-gray-600 text-lg mt-2">
+            Verify & Search for NFT Authenticity in Seconds.
+        </p>
+      </div>
+
+      {/* 搜索框区域 */}
+      <div className="mt-8 flex w-2/3 gap-2 justify-center items-center">
+        
+        {/* 下拉菜单 */}
+        <select 
+          className="border border-gray-300 p-2 rounded-lg shadow-sm text-gray-700 focus:ring-2 focus:ring-blue-400 focus:outline-none cursor-pointer"
+          value={searchType} 
+          onChange={(e) => setSearchType(e.target.value)}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <option value="wallet">💸Search by Wallet</option>
+          <option value="collection">📜 Search by Collection</option>
+        </select>
+
+        <select 
+          className="border border-gray-300 p-2 rounded-lg shadow-sm text-gray-700 focus:ring-2 focus:ring-blue-400 focus:outline-none cursor-pointer"
+          value={network} 
+          onChange={(e) => setNetwork(e.target.value)}
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <option value="mainnet">🌐 Ethereum</option>
+          <option value="sepolia">🛠️ Sepolia</option>
+        </select>
+
+        {/* 动态搜索框 */}
+        <input 
+          type="text" 
+          placeholder={searchType === "wallet" ? "Enter Wallet Address" : "Enter Collection Address"}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          className="border border-gray-300 p-2 rounded-lg flex-grow shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none placeholder-gray-400"
+        />
+      </div>
+
+      {/* 搜索按钮 */}
+      <button
+        className={`text-white px-4 py-2 mt-3 rounded-md w-1/5 
+          ${inputValue.trim() ? "bg-blue-500 hover:bg-blue-700" : "bg-blue-300"}
+        `}
+        onClick={fetchNFT}
+        disabled={!inputValue.trim()}
+      >
+        Let's Search!
+      </button>
+
+      {/* NFT 展示区域 */}
+      <div className='flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-5 justify-center'>
+        {NFTs.length > 0 ? (
+          NFTs
+            .filter(nft => nft.image?.cachedUrl) 
+            .map((nft, index) => (
+              <NFTCard key={index} nft={nft} onTestnet={network === 'sepolia'} />
+            ))
+        ) : (
+          <div className="text-center">
+            <p className="text-gray-700 text-lg font-semibold">No NFTs found.</p>
+            <p className="text-gray-500 text-sm mt-2">Try these test addresses:</p>
+
+            {/* Contract Addresses */}
+            <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
+              <h3 className="text-md font-bold text-gray-700 mb-2">🎨 NFT Collections</h3>
+              <ul className="text-gray-600 text-sm">
+                <li>Bored Ape: 0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D</li>
+                <li>Nakadoodles: 0xbD56d7197AADdfa3a06D8773B5337975941F1258</li>
+                <li>Other collection with Description: 0x495f947276749Ce646f68AC8c248420045cb7b5e</li>
+              </ul>
+            </div>
+
+            {/* Wallet Addresses */}
+            <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
+              <h3 className="text-md font-bold text-gray-700 mb-2">👛 Wallet Addresses</h3>
+              <ul className="text-gray-600 text-sm">
+                <li>Doodles Holder: 0x2B3Ab8e7BB14988616359B78709538b10900AB7D</li>
+                <li>RM_ART Collection: 0xc9b6321dc216D91E626E9BAA61b06B0E4d55bdb1</li>
+              </ul>
+            </div>
+
+            {/* Sepolia Wallet */}
+            <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
+              <h3 className="text-md font-bold text-gray-700 mb-2">🛠️ Sepolia Testnet</h3>
+              <ul className="text-gray-600 text-sm">
+                <li>My Wallet: 0x8B6B7a67f310E867cBE08c3Ffa94327CDD18b005</li>
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 悬浮 Plus 按钮 */}
+      <button 
+        className="fixed bottom-6 right-6 bg-blue-500 shadow-lg p-3 rounded-full hover:bg-blue-600 transition duration-300 hover:scale-110"
+      >
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="32" height="32" 
+          viewBox="0 0 24 24" 
+          fill="white"  // 确保图标是白色
+          className="w-12 h-12"
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6 13h-5v5h-2v-5h-5v-2h5v-5h2v5h5v2z"/>
+        </svg>
+      </button>
+
+
     </div>
   );
 }
