@@ -165,6 +165,21 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      <button 
+        className="fixed bottom-12 right-12 bg-blue-500 shadow-lg p-3 rounded-full hover:bg-blue-600 transition duration-300 hover:scale-110"
+      >
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="32" height="32" 
+          viewBox="0 0 24 24" 
+          fill="white"  // 确保图标是白色
+          className="w-12 h-12"
+        >
+          <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6 13h-5v5h-2v-5h-5v-2h5v-5h2v5h5v2z"/>
+        </svg>
+      </button>
+
     </div>
   );
 }
