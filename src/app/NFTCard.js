@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { useState } from "react";
+import Image from "next/image";
 
 export const NFTCard = ({ nft, onTestnet} ) => {
     const contractDomain = onTestnet? 'sepolia.': ''
@@ -53,6 +54,7 @@ export const NFTCard = ({ nft, onTestnet} ) => {
 
     return (
         <div className="w-1/4 max-w-sm flex flex-col border border-gray-300 bg-slate-100 shadow-lg rounded-md overflow-hidden transition-transform duration-300 ease-in-out group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
                 className="object-cover h-64 w-full rounded-t-md transition-transform duration-300 ease-in-out group-hover:scale-105"
                 src={nft.image.cachedUrl} 

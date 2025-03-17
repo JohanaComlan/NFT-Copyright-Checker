@@ -89,7 +89,7 @@ export default function Home() {
         onClick={fetchNFT}
         disabled={!inputValue.trim()}
       >
-        Let's Search!
+        Start Search!
       </button>
 
       {/* NFT 展示区域 */}
