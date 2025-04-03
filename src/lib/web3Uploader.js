@@ -1,46 +1,39 @@
 'use client'
 
-import { getClient } from './w3client'
-
 export async function uploadToWeb3Storage(file, name, description) {
-  const client = await getClient()
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('name', name)
+  formData.append('description', description)
 
-  // 上传图片
-  const imageCID = await client.uploadFile(file)
-  const imageURL = `ipfs://${imageCID}`
+  const res = await fetch('/api/upload-to-web3', {
+    method: 'POST',
+    body: formData,
+  })
 
-  // 构建 metadata
-  const metadata = {
-    name,
-    description,
-    image: imageURL
+  if (!res.ok) {
+    const { error } = await res.json()
+    throw new Error(error || 'Upload failed')
   }
 
-  const metadataBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' })
-  const metadataFile = new File([metadataBlob], 'metadata.json', { type: 'application/json' })
-
-  // 上传 metadata 文件
-  const metadataCID = await client.uploadFile(metadataFile)
-  return `ipfs://${metadataCID}`
+  const { metadataURL } = await res.json()
+  return metadataURL
 }
 
-
 export async function uploadWithIPFSImageURL(ipfsImageURL, name, description) {
-  const client = await getClient()
+  const res = await fetch('/api/create-metadata-from-ipfs', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ipfsImageURL, name, description }),
+  })
 
-  if (!/^ipfs:\/\/[a-zA-Z0-9]+$/.test(ipfsImageURL)) {
-    throw new Error("Invalid IPFS URL format. It should start with ipfs:// and follow with a CID.")
+  if (!res.ok) {
+    const { error } = await res.json()
+    throw new Error(error || 'Upload failed')
   }
 
-  const metadata = {
-    name,
-    description,
-    image: ipfsImageURL,
-  }
-
-  const metadataBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' })
-  const metadataFile = new File([metadataBlob], 'metadata.json', { type: 'application/json' })
-
-  const metadataCID = await client.uploadFile(metadataFile)
-  return `ipfs://${metadataCID}`
+  const { metadataURL } = await res.json()
+  return metadataURL
 }

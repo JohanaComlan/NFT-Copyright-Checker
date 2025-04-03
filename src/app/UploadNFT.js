@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { uploadToWeb3Storage, uploadWithIPFSImageURL } from '@/lib/web3Uploader';
+import { mintNFTWithMetaMask } from '@/lib/useMintNFT';
 import UploadForm from './UploadForm';
 import MintSuccess from './MintSuccess';
 import VerifyPage from './VerifyPage';
@@ -88,12 +89,12 @@ export default function UploadNFT({ onClose }) {
       return;
     }
     try {
-      // const { tokenId, contractAddress } = await mintNFTWithMetaMask(metaURL);
+      const { tokenId, contractAddress } = await mintNFTWithMetaMask(metaURL);
 
       resetForm();
       
-      const contractAddress = "0xB9E7Ae08Cc4f587549f240a5062fa96f0f78D534";
-      const tokenId = 3;
+      // const contractAddress = "0xB9E7Ae08Cc4f587549f240a5062fa96f0f78D534";
+      // const tokenId = 3;
       setMintSuccessData({ tokenId, contractAddress });
 
     } catch (err) {

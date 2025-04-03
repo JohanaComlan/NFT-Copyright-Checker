@@ -3,8 +3,8 @@ import { StoreMemory } from '@web3-storage/w3up-client/stores/memory'
 import * as Proof from '@web3-storage/w3up-client/proof'
 import { Signer } from '@web3-storage/w3up-client/principal/ed25519'
 
-const KEY = process.env.NEXT_PUBLIC_W3_KEY
-const PROOF = process.env.NEXT_PUBLIC_W3_PROOF
+const KEY = process.env.W3_KEY
+const PROOF = process.env.W3_PROOF
 
 let clientPromise
 
