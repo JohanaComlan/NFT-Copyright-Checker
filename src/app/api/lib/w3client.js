@@ -11,6 +11,9 @@ let clientPromise
 export function getClient() {
   if (!clientPromise) {
     clientPromise = (async () => {
+      if (!KEY || !PROOF) {
+        throw new Error('Missing W3_KEY or W3_PROOF in environment variables')
+      }
       const principal = Signer.parse(KEY)
       const store = new StoreMemory()
       const client = await Client.create({ principal, store })
