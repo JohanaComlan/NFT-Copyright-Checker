@@ -73,6 +73,9 @@ export const NFTCard = ({ nft, onTestnet} ) => {
     }, [nft.contract.address, nft.tokenId]);
 
 
+    const showVerifyDetails = () =>{
+        alert("Show detail!");
+    }
 
     return (
         <div className="w-full max-w-sm flex flex-col border border-gray-300 bg-slate-100 shadow-lg rounded-md overflow-hidden transition-transform duration-300 ease-in-out group">
@@ -128,7 +131,11 @@ export const NFTCard = ({ nft, onTestnet} ) => {
                         {verificationStatus === "verified" ? "Verified" : "Go Verify"}
                     </button> */}
                     <button
-                        onClick={handleVerify}
+                        onClick={
+                            verificationStatus === "verified"
+                              ? showVerifyDetails
+                              : handleVerify
+                          }
                         className={`border font-semibold ml-auto px-2 py-1 rounded-md transition duration-200 ${
                             verificationStatus === "verified"
                                 ? "border-green-500 text-white bg-green-500"
