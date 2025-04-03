@@ -23,7 +23,7 @@ export const NFTCard = ({ nft, onTestnet} ) => {
             const userAddress = accounts[0].toLowerCase();
 
             // 发送请求获取 NFT 的真正所有者
-            const apiKey = "yEVTo2V-shPzg-qzxazhog4MHDX2FxEh";
+            const apiKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
             const baseURL = `https://eth-${alchemy_networkType}.g.alchemy.com/nft/v3/${apiKey}/getOwnersForNFT`;
             const fetchURL = `${baseURL}?contractAddress=${nft.contract.address}&tokenId=${nft.tokenId}`;
 
@@ -53,7 +53,7 @@ export const NFTCard = ({ nft, onTestnet} ) => {
 
 
     return (
-        <div className="w-1/4 max-w-sm flex flex-col border border-gray-300 bg-slate-100 shadow-lg rounded-md overflow-hidden transition-transform duration-300 ease-in-out group">
+        <div className="w-full max-w-sm flex flex-col border border-gray-300 bg-slate-100 shadow-lg rounded-md overflow-hidden transition-transform duration-300 ease-in-out group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
                 className="object-cover h-64 w-full rounded-t-md transition-transform duration-300 ease-in-out group-hover:scale-105"
