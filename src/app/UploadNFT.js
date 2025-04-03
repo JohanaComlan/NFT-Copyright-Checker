@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { uploadToWeb3Storage, uploadWithIPFSImageURL } from '@/lib/web3Uploader';
+import { uploadToWeb3Storage, uploadWithIPFSImageURL, uploadImageToIPFS } from '@/lib/web3Uploader';
 import { mintNFTWithMetaMask } from '@/lib/useMintNFT';
 import UploadForm from './UploadForm';
 import MintSuccess from './MintSuccess';
@@ -69,10 +69,23 @@ export default function UploadNFT({ onClose }) {
         setIsLoading(false);
       }
     } else if (uploadMethod === "upload") {
-      if (!file || !name || !description) return alert("Please complete all fields.");
+      if (!file || !name || !description) 
+        return alert("Please complete all fields.");
       try {
         setIsLoading(true);
-        const metadataURL = await uploadToWeb3Storage(file, name, description);
+
+        // 步骤 1：上传图片，拿到 CID
+        const imageCID = await uploadImageToIPFS(file);
+        if (!imageCID || typeof imageCID !== 'string') {
+          throw new Error('Invalid image CID')
+        }
+        console.log('imageCID:', imageCID)
+        const imageURL = `ipfs://${imageCID}`;
+
+        // 步骤 2：生成 metadata 并上传
+        const metadataURL = await uploadWithIPFSImageURL(imageURL, name, description);
+
+        // 去 mint
         handleMint(metadataURL);
       } catch (err) {
         alert("❌ Failed to upload: " + err.message);

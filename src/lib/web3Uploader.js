@@ -37,3 +37,27 @@ export async function uploadWithIPFSImageURL(ipfsImageURL, name, description) {
   const { metadataURL } = await res.json()
   return metadataURL
 }
+
+export async function uploadImageToIPFS(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const res = await fetch('/api/upload-image', {
+    method: 'POST',
+    body: formData,
+  })
+
+  const text = await res.text()
+
+  try {
+    const json = JSON.parse(text)
+    if (!res.ok) throw new Error(json.error || 'Image upload failed')
+    if (!json.imageCID || typeof json.imageCID !== 'string') {
+      throw new Error('Invalid image CID')
+    }
+    return json.imageCID
+  } catch (e) {
+    throw new Error(`Upload failed: ${text.slice(0, 100)}...`)
+  }
+}
+

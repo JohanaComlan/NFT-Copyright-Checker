@@ -8,9 +8,9 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
 
-  if (!/^ipfs:\/\/[a-zA-Z0-9]+$/.test(ipfsImageURL)) {
+  if (!ipfsImageURL.startsWith('ipfs://')) {
     return NextResponse.json({ error: 'Invalid IPFS URL format' }, { status: 400 })
-  }
+  }  
 
   try {
     const client = await getClient()
