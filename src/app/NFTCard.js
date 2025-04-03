@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { verifyNFT, isNFTVerified } from '@/lib/verifyNFT'
 
 export const NFTCard = ({ nft, onTestnet} ) => {
     const contractDomain = onTestnet? 'sepolia.': ''
@@ -11,7 +12,7 @@ export const NFTCard = ({ nft, onTestnet} ) => {
     const [verificationStatus, setVerificationStatus] = useState(null);
 
     // 检查NFT所有者
-    const checkOwnership = async () => {
+    const handleVerify = async () => {
         if (!window.ethereum) {
             alert("Please install MetaMask for verification!");
             return;
@@ -36,8 +37,16 @@ export const NFTCard = ({ nft, onTestnet} ) => {
 
                 // 比对当前用户的钱包地址和 NFT 所有者
                 if (userAddress === ownerAddress) {
-                    setVerificationStatus("verified");
                     alert("✅ You can go verify");
+                    // 验证
+                    const result = await verifyNFT(nft.contract.address, nft.tokenId);
+                    if (result.success) {
+                        alert("✅ Successfully verified!");
+                        setVerificationStatus("verified"); // 直接设置为已验证，不重复查合约
+                    } else {
+                        alert("⚠️ Verification failed: " + result.error);
+                    }
+
                 } else {
                     setVerificationStatus("not-owner");
                     alert("❌ You are not the owner of this NFT and cannot be authenticated!");
@@ -50,6 +59,19 @@ export const NFTCard = ({ nft, onTestnet} ) => {
             alert("⚠️ Verification failed, please try again later!");
         }
     };
+
+   useEffect(() => {
+        const checkVerificationStatus = async () => {
+            const verified = await isNFTVerified(nft.contract.address, nft.tokenId);
+            if (verified) {
+                setVerificationStatus("verified");
+            } else {
+                setVerificationStatus("not-verified");
+            }
+        };
+        checkVerificationStatus();
+    }, [nft.contract.address, nft.tokenId]);
+
 
 
     return (
@@ -95,16 +117,18 @@ export const NFTCard = ({ nft, onTestnet} ) => {
                     </div>
 
                     {/* Go Verify 按钮 */}
-                    {/* <button 
-                        className="border border-green-500 text-green-500 bg-green-100/30 hover:bg-green-500 hover:text-white font-semibold ml-auto px-2 py-1 rounded-md transition duration-200"
-                        // 别删！是verified的绿色！
-                        // className="text-white bg-green-500 hover:bg-green-600 font-semibold ml-auto px-2 py-1 rounded-md transition duration-200"
-                    >
-                        Go Verify
-                    </button> */}
-                    {/* Go Verify 按钮 */}
-                    <button
+                    {/* <button
                         onClick={checkOwnership} // 绑定点击事件
+                        className={`border font-semibold ml-auto px-2 py-1 rounded-md transition duration-200 ${
+                            verificationStatus === "verified"
+                                ? "border-green-500 text-white bg-green-500"
+                                : "border-green-500 text-green-500 bg-green-100/30 hover:bg-green-500 hover:text-white"
+                        }`}
+                    >
+                        {verificationStatus === "verified" ? "Verified" : "Go Verify"}
+                    </button> */}
+                    <button
+                        onClick={handleVerify}
                         className={`border font-semibold ml-auto px-2 py-1 rounded-md transition duration-200 ${
                             verificationStatus === "verified"
                                 ? "border-green-500 text-white bg-green-500"
