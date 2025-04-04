@@ -1,7 +1,9 @@
 import { ethers } from "ethers";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { verifyNFT, isNFTVerified } from '@/lib/verifyNFT'
+import { verifyNFT, isNFTVerified } from '@/lib/verifyNFT';
+import { checkNFTInDatabase } from '@/lib/checkNFTInDatabase';
+
 
 export const NFTCard = ({ nft, onTestnet} ) => {
     const contractDomain = onTestnet? 'sepolia.': ''
@@ -38,13 +40,40 @@ export const NFTCard = ({ nft, onTestnet} ) => {
                 // 比对当前用户的钱包地址和 NFT 所有者
                 if (userAddress === ownerAddress) {
                     alert("✅ You can go verify");
-                    // 验证
-                    const result = await verifyNFT(nft.contract.address, nft.tokenId);
-                    if (result.success) {
+
+                    // 数据库验证
+                    const db_result = await checkNFTInDatabase({
+                        imageUrl: nft.image.cachedUrl,
+                        contract: nft.contract.address,
+                        tokenId: nft.tokenId,
+                        owner: ownerAddress,
+                      });
+                      
+                      if (!db_result || db_result.success === false) {
+                        alert("❌ Verification failed: " + (db_result?.error || "Unknown error"));
+                        return;
+                      }
+                      
+                      if (db_result.matched) {
+                        const match = db_result.match;
+                        alert(`⚠️ This image is already verified:
+                      - Contract: ${match.contract}
+                      - Token ID: ${match.tokenId}
+                      - Owner: ${match.owner}
+                      - Time: ${new Date(match.timestamp).toLocaleString()}
+                      - Distance: ${match.distance}`);
+                        return;
+                      }
+                      
+                      alert("✅ Successfully verified and added to the database!");
+
+                    // 合约验证
+                    const contract_result = await verifyNFT(nft.contract.address, nft.tokenId);
+                    if (contract_result.success) {
                         alert("✅ Successfully verified!");
                         setVerificationStatus("verified"); // 直接设置为已验证，不重复查合约
                     } else {
-                        alert("⚠️ Verification failed: " + result.error);
+                        alert("⚠️ Verification failed: " + contract_result.error);
                     }
 
                 } else {
@@ -60,6 +89,7 @@ export const NFTCard = ({ nft, onTestnet} ) => {
         }
     };
 
+
    useEffect(() => {
         const checkVerificationStatus = async () => {
             const verified = await isNFTVerified(nft.contract.address, nft.tokenId);
@@ -71,6 +101,7 @@ export const NFTCard = ({ nft, onTestnet} ) => {
         };
         checkVerificationStatus();
     }, [nft.contract.address, nft.tokenId]);
+
 
 
     const showVerifyDetails = () =>{
@@ -120,16 +151,6 @@ export const NFTCard = ({ nft, onTestnet} ) => {
                     </div>
 
                     {/* Go Verify 按钮 */}
-                    {/* <button
-                        onClick={checkOwnership} // 绑定点击事件
-                        className={`border font-semibold ml-auto px-2 py-1 rounded-md transition duration-200 ${
-                            verificationStatus === "verified"
-                                ? "border-green-500 text-white bg-green-500"
-                                : "border-green-500 text-green-500 bg-green-100/30 hover:bg-green-500 hover:text-white"
-                        }`}
-                    >
-                        {verificationStatus === "verified" ? "Verified" : "Go Verify"}
-                    </button> */}
                     <button
                         onClick={
                             verificationStatus === "verified"
