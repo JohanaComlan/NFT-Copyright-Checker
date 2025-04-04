@@ -18,7 +18,61 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [steps, setSteps] = useState([]);
 
+  const [errorMsg, setErrorMsg] = useState("");
+  const [searched, setSearched] = useState(false); // 是否执行过搜索
+
+  // const fetchNFT = async (params = {}) => {
+
+  //   setErrorMsg(""); // 清除旧错误
+  //   setSearched(true);
+
+  //   const {
+  //     searchType: overrideType = searchType,
+  //     network: overrideNetwork = network,
+  //     inputValue: overrideInput = inputValue,
+  //     useTokenId: overrideUseToken = useTokenId,
+  //     tokenId: overrideTokenId = tokenId,
+  //   } = params;
+  
+  //   let api_key = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
+  //   let baseURL = `https://eth-${overrideNetwork}.g.alchemy.com/nft/v3/${api_key}/`;
+  //   let options = { method: 'GET', headers: { accept: 'application/json' } };
+  
+  //   console.log("Fetching NFTs for", overrideType, ":", overrideInput);
+  
+  //   let fetchURL;
+  //   if (overrideType === "wallet") {
+  //     fetchURL = `${baseURL}getNFTsForOwner?owner=${overrideInput}&withMetadata=true&pageSize=100`;
+  //   } else {
+  //     if (overrideUseToken && overrideTokenId.trim()) {
+  //       fetchURL = `${baseURL}getNFTMetadata?contractAddress=${overrideInput}&tokenId=${overrideTokenId}&refreshCache=false`;
+  //     } else {
+  //       fetchURL = `${baseURL}getNFTsForContract?contractAddress=${overrideInput}&withMetadata=true`;
+  //     }
+  //   }
+  
+  //   try {
+  //     const response = await fetch(fetchURL, options);
+  //     const data = await response.json();
+  
+  //     if (data) {
+  //       setNFTs(
+  //         overrideType === "wallet"
+  //           ? data.ownedNfts
+  //           : overrideUseToken && overrideTokenId.trim()
+  //           ? [data]
+  //           : data.nfts
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching NFTs:", error);
+  //   }
+  // };
+  
   const fetchNFT = async (params = {}) => {
+    setErrorMsg(""); // 清除旧错误
+    setSearched(true);
+  
     const {
       searchType: overrideType = searchType,
       network: overrideNetwork = network,
@@ -30,8 +84,6 @@ export default function Home() {
     let api_key = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
     let baseURL = `https://eth-${overrideNetwork}.g.alchemy.com/nft/v3/${api_key}/`;
     let options = { method: 'GET', headers: { accept: 'application/json' } };
-  
-    console.log("Fetching NFTs for", overrideType, ":", overrideInput);
   
     let fetchURL;
     if (overrideType === "wallet") {
@@ -48,17 +100,30 @@ export default function Home() {
       const response = await fetch(fetchURL, options);
       const data = await response.json();
   
+      let fetchedNFTs = [];
+  
       if (data) {
-        setNFTs(
+        fetchedNFTs =
           overrideType === "wallet"
             ? data.ownedNfts
             : overrideUseToken && overrideTokenId.trim()
             ? [data]
-            : data.nfts
-        );
+            : data.nfts;
+  
+        const displayableNFTs = fetchedNFTs?.filter(nft => nft.image?.cachedUrl);
+        setNFTs(displayableNFTs);
+  
+        if (!displayableNFTs || displayableNFTs.length === 0) {
+          setErrorMsg("No NFTs found or no displayable images.");
+        }
+      } else {
+        setNFTs([]);
+        setErrorMsg("Invalid response from server.");
       }
     } catch (error) {
       console.error("Error fetching NFTs:", error);
+      setNFTs([]);
+      setErrorMsg("Error occurred while fetching NFTs.");
     }
   };
   
@@ -223,6 +288,13 @@ export default function Home() {
           Start Search!
         </button>
 
+        {/* 错误展示 */}
+        {searched && errorMsg && (
+          <div className="text-red-500 font-medium mt-2 text-lg">
+            {errorMsg}
+          </div>
+        )}
+
         {/* NFT 展示区域 */}
           {Array.isArray(NFTs) && NFTs.length > 0 ? (
             <div className="grid gap-y-12 gap-x-5 mt-4 mx-auto w-2/3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
@@ -231,13 +303,12 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="mt-8 w-1/2 mx-auto text-center">
-              <p className="text-gray-700 text-lg font-semibold">No NFTs found.</p>
-              <p className="text-gray-500 text-sm mt-2">Try these test addresses:</p>
+            <div className="mt-6 w-1/2 mx-auto text-center">
+              <p className="text-gray-700 text-2xl font-semibold">Try these test addresses:</p>
 
               {/* Contract Addresses */}
               <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
-                <h3 className="text-md font-bold text-gray-700 mb-2">🎨 NFT Collections</h3>
+                <h3 className="text-md font-bold text-gray-700 mb-2">🎨 Search by Collections - Ethereum</h3>
                 <ul className="text-gray-600 text-sm">
                   <li>Bored Ape: 0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D</li>
                   <li>Nakadoodles: 0xbD56d7197AADdfa3a06D8773B5337975941F1258</li>
@@ -247,7 +318,7 @@ export default function Home() {
 
               {/* Wallet Addresses */}
               <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
-                <h3 className="text-md font-bold text-gray-700 mb-2">👛 Wallet Addresses</h3>
+                <h3 className="text-md font-bold text-gray-700 mb-2">👛Search by Wallet - Ethereum</h3>
                 <ul className="text-gray-600 text-sm">
                   <li>Doodles Holder: 0x2B3Ab8e7BB14988616359B78709538b10900AB7D</li>
                   <li>RM_ART Collection: 0xc9b6321dc216D91E626E9BAA61b06B0E4d55bdb1</li>
@@ -256,7 +327,7 @@ export default function Home() {
 
               {/* Sepolia Wallet */}
               <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
-                <h3 className="text-md font-bold text-gray-700 mb-2">🛠️ Sepolia Testnet</h3>
+                <h3 className="text-md font-bold text-gray-700 mb-2">🛠️ Search by Wallet - Sepolia</h3>
                 <ul className="text-gray-600 text-sm">
                   <li>My Wallet: 0x8B6B7a67f310E867cBE08c3Ffa94327CDD18b005</li>
                 </ul>

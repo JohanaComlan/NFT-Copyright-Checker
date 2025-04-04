@@ -6,6 +6,7 @@ import { checkNFTInDatabase } from '@/lib/checkNFTInDatabase';
 import VerificationInfoPopUp from './VerificationInfoPopUp';
 import CopyableText from "@/lib/CopyableText";
 import { handleVerification } from "@/lib/handleVerification";
+import VerificationDetailsPopUp from "@/app/VerificationDetailsPopUp"
 
 
 export const NFTCard = ({ nft, onTestnet} ) => {
@@ -17,150 +18,15 @@ export const NFTCard = ({ nft, onTestnet} ) => {
     const [verificationStatus, setVerificationStatus] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
 
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [verifyInfo, setVerifyInfo] = useState(null);
+
     const [steps, setSteps] = useState([
         { title: "Ownership Verification", status: "idle" },
         { title: "Duplication Check", status: "idle" },
         { title: "Blockchain Recording", status: "idle" }
     ]);
 
-    // 弃用
-    // const handleVerify = async () => {
-    //     if (!window.ethereum) {
-    //       alert("Please install MetaMask to proceed with verification.");
-    //       return;
-    //     }
-      
-    //     setModalOpen(true);
-    //     setSteps([
-    //       { title: "Ownership Verification", status: "loading" },
-    //       { title: "Duplication Check", status: "idle" },
-    //       { title: "Blockchain Recording", status: "idle" }
-    //     ]);
-      
-    //     try {
-    //       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-    //       const userAddress = accounts[0].toLowerCase();
-      
-    //       const apiKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
-    //       const baseURL = `https://eth-${alchemy_networkType}.g.alchemy.com/nft/v3/${apiKey}/getOwnersForNFT`;
-    //       const fetchURL = `${baseURL}?contractAddress=${nft.contract.address}&tokenId=${nft.tokenId}`;
-      
-    //       const response = await fetch(fetchURL, { method: "GET", headers: { accept: "application/json" } });
-    //       const data = await response.json();
-      
-    //       if (data.owners && data.owners.length > 0) {
-    //         const ownerAddress = data.owners[0].toLowerCase();
-      
-    //         if (userAddress !== ownerAddress) {
-    //           setSteps([
-    //             {
-    //               title: "Ownership Verification",
-    //               status: "error",
-    //               message: "You are not the owner of this NFT and cannot proceed with verification."
-    //             },
-    //             { title: "Duplication Check", status: "idle" },
-    //             { title: "Blockchain Recording", status: "idle" }
-    //           ]);
-    //           return;
-    //         }
-      
-    //         setSteps(prev => {
-    //           const updated = [...prev];
-    //           updated[0].status = "success";
-    //           updated[1].status = "loading";
-    //           return updated;
-    //         });
-      
-    //         const db_result = await checkNFTInDatabase({
-    //           imageUrl: nft.image.cachedUrl,
-    //           contract: nft.contract.address,
-    //           tokenId: nft.tokenId,
-    //           owner: ownerAddress,
-    //         });
-      
-    //         if (!db_result || db_result.success === false) {
-    //           setSteps(prev => {
-    //             const updated = [...prev];
-    //             updated[1] = {
-    //               ...updated[1],
-    //               status: "error",
-    //               message: "Database verification failed: " + (db_result?.error || "Unknown error.")
-    //             };
-    //             return updated;
-    //           });
-    //           return;
-    //         }
-      
-    //         if (db_result.matched) {
-    //           const match = db_result.match;
-      
-    //           setSteps(prev => {
-    //             const updated = [...prev];
-    //             updated[1] = {
-    //               ...updated[1],
-    //               status: "error",
-    //               message: "This image has already been verified in the system.",
-    //               owner: match.owner,
-    //               contract: match.contract,
-    //               tokenId: match.tokenId,
-    //               timestamp: new Date(match.timestamp).toLocaleString()
-    //             };
-    //             return updated;
-    //           });
-    //           return;
-    //         }
-      
-    //         setSteps(prev => {
-    //           const updated = [...prev];
-    //           updated[1].status = "success";
-    //           updated[2].status = "loading";
-    //           return updated;
-    //         });
-      
-    //         const contract_result = await verifyNFT(nft.contract.address, nft.tokenId);
-    //         if (contract_result.success) {
-    //           setSteps(prev => {
-    //             const updated = [...prev];
-    //             updated[2].status = "success";
-    //             return updated;
-    //           });
-    //           setVerificationStatus("verified");
-    //         } else {
-    //           setSteps(prev => {
-    //             const updated = [...prev];
-    //             updated[2] = {
-    //               ...updated[2],
-    //               status: "error",
-    //               message: "Blockchain recording failed. Please try again later."
-    //             };
-    //             return updated;
-    //           });
-    //         }
-      
-    //       } else {
-    //         setSteps([
-    //           {
-    //             title: "Ownership Verification",
-    //             status: "error",
-    //             message: "Unable to retrieve ownership information for this NFT."
-    //           },
-    //           { title: "Duplication Check", status: "idle" },
-    //           { title: "Blockchain Recording", status: "idle" }
-    //         ]);
-    //       }
-    //     } catch (error) {
-    //       console.error("Verification error:", error);
-    //       setSteps([
-    //         {
-    //           title: "Ownership Verification",
-    //           status: "error",
-    //           message: "An unexpected error occurred during verification. Please try again."
-    //         },
-    //         { title: "Duplication Check", status: "idle" },
-    //         { title: "Blockchain Recording", status: "idle" }
-    //       ]);
-    //     }
-    //   };
       
     // 验证NFT
     const handleVerify = () => {
@@ -185,9 +51,29 @@ export const NFTCard = ({ nft, onTestnet} ) => {
     }, [nft.contract.address, nft.tokenId]);
 
 
-    const showVerifyDetails = () =>{
-        alert("Show detail!");
-    }
+    const showVerifyDetails = async () => {
+      try {
+        const res = await fetch("/api/verified-info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contract: nft.contract.address,
+            tokenId: nft.tokenId
+          })
+        });
+    
+        const result = await res.json();
+        if (result.success && result.data) {
+          setVerifyInfo(result.data);
+          setShowDetailsModal(true);
+        } else {
+          alert("Verification info not found.");
+        }
+      } catch (err) {
+        console.error("Failed to fetch verification details:", err);
+        alert("Error loading verification info.");
+      }
+    };
 
     const handleCloseModal = () => {
         setModalOpen(false); // 控制弹窗关闭
@@ -202,11 +88,20 @@ export const NFTCard = ({ nft, onTestnet} ) => {
 
     return (
         <>
+            {/* 点击未验证的NFT出来的弹窗 */}
             <VerificationInfoPopUp
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
                 steps={steps}
             />
+
+            {/* 点击已验证的NFT出来的弹窗 */}
+            <VerificationDetailsPopUp
+              open={showDetailsModal}
+              onClose={() => setShowDetailsModal(false)}
+              data={verifyInfo}
+            />
+
             <div className="w-full max-w-sm flex flex-col border border-gray-300 bg-slate-100 shadow-lg rounded-md overflow-hidden transition-transform duration-300 ease-in-out group">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
