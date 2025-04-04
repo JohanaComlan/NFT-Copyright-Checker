@@ -1,3 +1,5 @@
+import { Loader2 } from "lucide-react";
+
 export default function UploadForm({
     uploadMethod,
     metadataURL,
@@ -150,7 +152,8 @@ export default function UploadForm({
         </div>
   
         {isLoading && (
-          <p className="text-sm text-gray-500 mt-2 text-center">
+          <p className="text-sm text-gray-500 mt-2 text-center flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-green-500" />
             Processing, may take about 1 minute...
           </p>
         )}
