@@ -15,7 +15,7 @@ export default function CopyableText({ shortText, fullText }) {
   };
 
   return (
-    <span className="inline-flex items-center gap-2 ml-1">
+    <span className="inline-flex items-center gap-2 ml-1 flex-wrap break-all">
       <span>{shortText}</span>
       <button
         onClick={handleCopy}

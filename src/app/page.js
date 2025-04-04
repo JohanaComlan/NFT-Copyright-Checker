@@ -5,6 +5,7 @@ import UploadNFT from "./UploadNFT";
 import { ethers } from "ethers";
 import VerificationInfoPopUp from "./VerificationInfoPopUp";
 import { handleVerification } from "@/lib/handleVerification";
+import CopyableText from "@/lib/CopyableText";
 
 export default function Home() {
   const [searchType, setSearchType] = useState("wallet"); // "wallet" or "collection"
@@ -21,58 +22,13 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const [searched, setSearched] = useState(false); // 是否执行过搜索
 
-  // const fetchNFT = async (params = {}) => {
 
-  //   setErrorMsg(""); // 清除旧错误
-  //   setSearched(true);
 
-  //   const {
-  //     searchType: overrideType = searchType,
-  //     network: overrideNetwork = network,
-  //     inputValue: overrideInput = inputValue,
-  //     useTokenId: overrideUseToken = useTokenId,
-  //     tokenId: overrideTokenId = tokenId,
-  //   } = params;
-  
-  //   let api_key = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
-  //   let baseURL = `https://eth-${overrideNetwork}.g.alchemy.com/nft/v3/${api_key}/`;
-  //   let options = { method: 'GET', headers: { accept: 'application/json' } };
-  
-  //   console.log("Fetching NFTs for", overrideType, ":", overrideInput);
-  
-  //   let fetchURL;
-  //   if (overrideType === "wallet") {
-  //     fetchURL = `${baseURL}getNFTsForOwner?owner=${overrideInput}&withMetadata=true&pageSize=100`;
-  //   } else {
-  //     if (overrideUseToken && overrideTokenId.trim()) {
-  //       fetchURL = `${baseURL}getNFTMetadata?contractAddress=${overrideInput}&tokenId=${overrideTokenId}&refreshCache=false`;
-  //     } else {
-  //       fetchURL = `${baseURL}getNFTsForContract?contractAddress=${overrideInput}&withMetadata=true`;
-  //     }
-  //   }
-  
-  //   try {
-  //     const response = await fetch(fetchURL, options);
-  //     const data = await response.json();
-  
-  //     if (data) {
-  //       setNFTs(
-  //         overrideType === "wallet"
-  //           ? data.ownedNfts
-  //           : overrideUseToken && overrideTokenId.trim()
-  //           ? [data]
-  //           : data.nfts
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching NFTs:", error);
-  //   }
-  // };
-  
+  // 获取NFT
   const fetchNFT = async (params = {}) => {
     setErrorMsg(""); // 清除旧错误
     setSearched(true);
-  
+
     const {
       searchType: overrideType = searchType,
       network: overrideNetwork = network,
@@ -80,11 +36,11 @@ export default function Home() {
       useTokenId: overrideUseToken = useTokenId,
       tokenId: overrideTokenId = tokenId,
     } = params;
-  
+
     let api_key = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
     let baseURL = `https://eth-${overrideNetwork}.g.alchemy.com/nft/v3/${api_key}/`;
     let options = { method: 'GET', headers: { accept: 'application/json' } };
-  
+
     let fetchURL;
     if (overrideType === "wallet") {
       fetchURL = `${baseURL}getNFTsForOwner?owner=${overrideInput}&withMetadata=true&pageSize=100`;
@@ -95,24 +51,24 @@ export default function Home() {
         fetchURL = `${baseURL}getNFTsForContract?contractAddress=${overrideInput}&withMetadata=true`;
       }
     }
-  
+
     try {
       const response = await fetch(fetchURL, options);
       const data = await response.json();
-  
+
       let fetchedNFTs = [];
-  
+
       if (data) {
         fetchedNFTs =
           overrideType === "wallet"
             ? data.ownedNfts
             : overrideUseToken && overrideTokenId.trim()
-            ? [data]
-            : data.nfts;
-  
+              ? [data]
+              : data.nfts;
+
         const displayableNFTs = fetchedNFTs?.filter(nft => nft.image?.cachedUrl);
         setNFTs(displayableNFTs);
-  
+
         if (!displayableNFTs || displayableNFTs.length === 0) {
           setErrorMsg("No NFTs found or no displayable images.");
         }
@@ -126,21 +82,22 @@ export default function Home() {
       setErrorMsg("Error occurred while fetching NFTs.");
     }
   };
-  
+
+  // 点击我的NFT
   const handleMyNFTClick = async () => {
     if (!window.ethereum) {
       alert("Please install MetaMask!");
       return;
     }
-  
+
     try {
       // 获取钱包地址
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
       const walletAddress = accounts[0]?.toLowerCase();
-  
+
       // 获取当前链 ID
       const chainId = await window.ethereum.request({ method: "eth_chainId" });
-  
+
       // 判断网络类型
       let selectedNetwork;
       if (chainId === "0x1") {
@@ -151,7 +108,7 @@ export default function Home() {
         alert("Unsupported network. Please switch to Ethereum Mainnet or Sepolia.");
         return;
       }
-  
+
       // 设置状态，自动填入
       setSearchType("wallet");
       setNetwork(selectedNetwork);
@@ -168,8 +125,8 @@ export default function Home() {
       alert("Something went wrong, please try again.");
     }
   };
-  
 
+  // 控制NFT上传后的验证
   const handleVerifyFromUpload = async ({ contract, tokenId, preview }) => {
     setShowUpload(false);
 
@@ -200,13 +157,12 @@ export default function Home() {
     }
   };
 
-  
 
   return (
     <div className="relative min-h-screen">
       {/* MyNFT 按钮*/}
-      <button 
-        onClick={handleMyNFTClick} 
+      <button
+        onClick={handleMyNFTClick}
         className="absolute top-10 right-15 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition z-50"
       >
         MyNFT
@@ -269,9 +225,8 @@ export default function Home() {
               placeholder="Enter Token ID"
               value={tokenId}
               onChange={(e) => setTokenId(e.target.value)}
-              className={`border p-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none placeholder-gray-400 ${
-                useTokenId ? "border-gray-300" : "border-gray-200 bg-gray-100 cursor-not-allowed"
-              }`}
+              className={`border p-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none placeholder-gray-400 ${useTokenId ? "border-gray-300" : "border-gray-200 bg-gray-100 cursor-not-allowed"
+                }`}
               disabled={!useTokenId}
             />
           </div>
@@ -279,9 +234,8 @@ export default function Home() {
 
         {/* 搜索按钮 */}
         <button
-          className={`text-white px-4 py-2 mt-3 rounded-md w-1/5 ${
-            inputValue.trim() ? "bg-blue-500 hover:bg-blue-700" : "bg-blue-300"
-          }`}
+          className={`text-white px-4 py-2 mt-3 rounded-md w-1/5 ${inputValue.trim() ? "bg-blue-500 hover:bg-blue-700" : "bg-blue-300"
+            }`}
           onClick={fetchNFT}
           disabled={!inputValue.trim()}
         >
@@ -296,58 +250,94 @@ export default function Home() {
         )}
 
         {/* NFT 展示区域 */}
-          {Array.isArray(NFTs) && NFTs.length > 0 ? (
-            <div className="grid gap-y-12 gap-x-5 mt-4 mx-auto w-2/3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-              {NFTs.filter(nft => nft.image?.cachedUrl).map((nft, index) => (
-                <NFTCard key={index} nft={nft} onTestnet={network === "sepolia"} />
-              ))}
+        {Array.isArray(NFTs) && NFTs.length > 0 ? (
+          <div className="grid gap-y-12 gap-x-5 mt-4 mx-auto w-2/3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+            {NFTs.filter(nft => nft.image?.cachedUrl).map((nft, index) => (
+              <NFTCard key={index} nft={nft} onTestnet={network === "sepolia"} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 w-1/2 mx-auto text-center">
+            <p className="text-gray-700 text-2xl font-semibold">Try these test addresses:</p>
+
+            {/* Contract Addresses */}
+            <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
+              <h3 className="text-md font-bold text-gray-700 mb-2">🎨 Search by Collections - Ethereum</h3>
+              <ul className="text-gray-600 text-sm space-y-1">
+                <li className="break-words whitespace-normal">
+                  Bored Ape:{" "}
+                  <CopyableText
+                    shortText="0xBC4CA0EdA7647A8aB7C...936f13D"
+                    fullText="0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D"
+                  />
+                </li>
+                <li className="break-words whitespace-normal">
+                  Nakadoodles:{" "}
+                  <CopyableText
+                    shortText="0xbD56d7197AADdfa3a06D...1258"
+                    fullText="0xbD56d7197AADdfa3a06D8773B5337975941F1258"
+                  />
+                </li>
+                <li className="break-words whitespace-normal">
+                  Other collection:{" "}
+                  <CopyableText
+                    shortText="0x495f947276749Ce646f6...b7b5e"
+                    fullText="0x495f947276749Ce646f68AC8c248420045cb7b5e"
+                  />
+                </li>
+              </ul>
             </div>
-          ) : (
-            <div className="mt-6 w-1/2 mx-auto text-center">
-              <p className="text-gray-700 text-2xl font-semibold">Try these test addresses:</p>
 
-              {/* Contract Addresses */}
-              <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
-                <h3 className="text-md font-bold text-gray-700 mb-2">🎨 Search by Collections - Ethereum</h3>
-                <ul className="text-gray-600 text-sm">
-                  <li>Bored Ape: 0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D</li>
-                  <li>Nakadoodles: 0xbD56d7197AADdfa3a06D8773B5337975941F1258</li>
-                  <li>Other collection with Description: 0x495f947276749Ce646f68AC8c248420045cb7b5e</li>
-                </ul>
-              </div>
-
-              {/* Wallet Addresses */}
-              <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
-                <h3 className="text-md font-bold text-gray-700 mb-2">👛Search by Wallet - Ethereum</h3>
-                <ul className="text-gray-600 text-sm">
-                  <li>Doodles Holder: 0x2B3Ab8e7BB14988616359B78709538b10900AB7D</li>
-                  <li>RM_ART Collection: 0xc9b6321dc216D91E626E9BAA61b06B0E4d55bdb1</li>
-                </ul>
-              </div>
-
-              {/* Sepolia Wallet */}
-              <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
-                <h3 className="text-md font-bold text-gray-700 mb-2">🛠️ Search by Wallet - Sepolia</h3>
-                <ul className="text-gray-600 text-sm">
-                  <li>My Wallet: 0x8B6B7a67f310E867cBE08c3Ffa94327CDD18b005</li>
-                </ul>
-              </div>
+            {/* Wallet Addresses */}
+            <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
+              <h3 className="text-md font-bold text-gray-700 mb-2">👛 Search by Wallet - Ethereum</h3>
+              <ul className="text-gray-600 text-sm space-y-1">
+                <li className="break-words whitespace-normal">
+                  Doodles Holder:{" "}
+                  <CopyableText
+                    shortText="0x2B3Ab8e7BB1498861635...AB7D"
+                    fullText="0x2B3Ab8e7BB14988616359B78709538b10900AB7D"
+                  />
+                </li>
+                <li className="break-words whitespace-normal">
+                  RM_ART Collection:{" "}
+                  <CopyableText
+                    shortText="0xc9b6321dc216D91E626E...db1"
+                    fullText="0xc9b6321dc216D91E626E9BAA61b06B0E4d55bdb1"
+                  />
+                </li>
+              </ul>
             </div>
-          )}
+
+            {/* Sepolia Wallet */}
+            <div className="mt-3 bg-gray-100 p-4 rounded-md shadow-sm">
+              <h3 className="text-md font-bold text-gray-700 mb-2">🛠️ Search by Wallet - Sepolia</h3>
+              <ul className="text-gray-600 text-sm space-y-1">
+                <li className="break-words whitespace-normal">
+                  My Wallet:{" "}
+                  <CopyableText
+                    shortText="0x8B6B7a67f310E867cBE0...b005"
+                    fullText="0x8B6B7a67f310E867cBE08c3Ffa94327CDD18b005"
+                  />
+                </li>
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* 悬浮 Plus 按钮 */}
-        <button 
+        <button
           className="fixed bottom-12 right-12 bg-blue-500 shadow-lg p-3 rounded-full hover:bg-blue-600 transition duration-300 hover:scale-110"
           onClick={() => setShowUpload(true)}
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="32" height="32" 
-            viewBox="0 0 24 24" 
-            fill="white"  
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32" height="32"
+            viewBox="0 0 24 24"
+            fill="white"
             className="w-12 h-12"
           >
-            <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6 13h-5v5h-2v-5h-5v-2h5v-5h2v5h5v2z"/>
+            <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6 13h-5v5h-2v-5h-5v-2h5v-5h2v5h5v2z" />
           </svg>
         </button>
 
