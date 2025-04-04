@@ -5,8 +5,11 @@ import { mintNFTWithMetaMask } from '@/lib/useMintNFT';
 import UploadForm from './UploadForm';
 import MintSuccess from './MintSuccess';
 import VerifyPage from './VerifyPage';
+import { verifyNFT } from '@/lib/verifyNFT';
+import { checkNFTInDatabase } from '@/lib/checkNFTInDatabase';
+import VerificationInfoPopUp from './VerificationInfoPopUp';
 
-export default function UploadNFT({ onClose }) {
+export default function UploadNFT({ onClose, onGoVerify  }) {
   const [uploadMethod, setUploadMethod] = useState("upload");
   const [metadataURL, setMetadataURL] = useState("");
   const [ipfsImageURL, setIpfsImageURL] = useState("");
@@ -141,6 +144,19 @@ export default function UploadNFT({ onClose }) {
     setMintSuccessData(null);
   };
 
+
+  // 用于验证刚mint的NFT
+  const handleGoVerify = () => {
+    onGoVerify?.({
+      contract: { address: mintSuccessData.contractAddress },
+      tokenId: mintSuccessData.tokenId,
+      preview: preview // 可选，方便用作 image.cachedUrl
+    });
+  };
+  
+  
+
+
   // 传入MintSuccess的映射
   const handleFieldChange = (field, value) => {
     const setters = {
@@ -170,7 +186,7 @@ export default function UploadNFT({ onClose }) {
             tokenId={mintSuccessData.tokenId}
             contractAddress={mintSuccessData.contractAddress}
             onMaybeLater={handleMaybeLater}
-            onGoVerify={() => setShowVerify(true)}
+            onGoVerify={handleGoVerify}
           />
         ) : (
           <UploadForm

@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { NFTCard } from "./NFTCard";
 import UploadNFT from "./UploadNFT";
 import { ethers } from "ethers";
-
+import VerificationInfoPopUp from "./VerificationInfoPopUp";
+import { handleVerification } from "@/lib/handleVerification";
 
 export default function Home() {
   const [searchType, setSearchType] = useState("wallet"); // "wallet" or "collection"
@@ -14,44 +15,8 @@ export default function Home() {
   const [tokenId, setTokenId] = useState(""); // 用户输入的 tokenId
   const [showUpload, setShowUpload] = useState(false); // 是否打开上传图片弹窗
 
-  // const fetchNFT = async () => {
-  //   let api_key = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
-  //   let baseURL = `https://eth-${network}.g.alchemy.com/nft/v3/${api_key}/`;
-  //   let options = { method: 'GET', headers: { accept: 'application/json' } };
-
-  //   console.log("Fetching NFTs for", searchType, ":", inputValue);
-
-  //   let fetchURL;
-  //   if (searchType === "wallet") {
-  //     fetchURL = `${baseURL}getNFTsForOwner?owner=${inputValue}&withMetadata=true&pageSize=100`;
-  //   } else {
-  //     if (useTokenId && tokenId.trim()) {
-  //       // 如果用户勾选了 Use Token 并输入了 Token ID
-  //       fetchURL = `${baseURL}getNFTMetadata?contractAddress=${inputValue}&tokenId=${tokenId}&refreshCache=false`;
-  //     } else {
-  //       // 普通 Collection 查询
-  //       fetchURL = `${baseURL}getNFTsForContract?contractAddress=${inputValue}&withMetadata=true`;
-  //     }
-  //   }
-
-  //   try {
-  //     const response = await fetch(fetchURL, options);
-  //     const data = await response.json();
-
-  //     if (data) {
-  //       console.log("NFTs:", data);
-  //       setNFTs(
-  //         searchType === "wallet"
-  //           ? data.ownedNfts
-  //           : useTokenId && tokenId.trim()
-  //           ? [data] // 如果是单个 NFT 查询，返回单个对象的数组
-  //           : data.nfts
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching NFTs:", error);
-  //   }
-  // };
+  const [modalOpen, setModalOpen] = useState(false);
+  const [steps, setSteps] = useState([]);
 
   const fetchNFT = async (params = {}) => {
     const {
@@ -138,6 +103,38 @@ export default function Home() {
       alert("Something went wrong, please try again.");
     }
   };
+  
+
+  const handleVerifyFromUpload = async ({ contract, tokenId, preview }) => {
+    setShowUpload(false);
+
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
+      const fetchURL = `https://eth-sepolia.g.alchemy.com/nft/v3/${apiKey}/getNFTMetadata?contractAddress=${contract.address}&tokenId=${tokenId}&refreshCache=false`;
+
+      const res = await fetch(fetchURL, {
+        method: 'GET',
+        headers: { accept: 'application/json' }
+      });
+      const data = await res.json();
+
+      const nft = {
+        contract: { address: data.contract.address },
+        tokenId: data.tokenId,
+        image: { cachedUrl: data.image?.cachedUrl || preview },
+      };
+
+      handleVerification({
+        nft,
+        setSteps,
+        setModalOpen,
+      });
+
+    } catch (err) {
+      console.error("Failed to fetch NFT metadata:", err);
+    }
+  };
+
   
 
   return (
@@ -283,8 +280,23 @@ export default function Home() {
           </svg>
         </button>
 
-        {/* 上传面板条件渲染 */}
-        {showUpload && <UploadNFT onClose={() => setShowUpload(false)} />}
+        {/* 上传弹窗 */}
+        {showUpload && (
+          <UploadNFT
+            onClose={() => setShowUpload(false)}
+            onGoVerify={handleVerifyFromUpload}
+          />
+        )}
+
+        {/* 验证弹窗 */}
+        <VerificationInfoPopUp
+          open={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setSteps([]);
+          }}
+          steps={steps}
+        />
       </div>
     </div>
   );
