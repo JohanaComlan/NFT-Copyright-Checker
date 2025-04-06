@@ -16,10 +16,10 @@ function hammingDistanceBigInt(ph1, ph2) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { phash, contract, tokenId, owner } = body;
+    const { phash, contract, tokenId, owner, sha256 } = body;
 
     // 字段检查
-    if (!phash || !contract || !tokenId || !owner) {
+    if (!phash || !contract || !tokenId || !owner || !sha256) {
       return new Response(JSON.stringify({
         success: false,
         error: "Missing required fields"
@@ -42,6 +42,7 @@ export async function POST(req) {
         tokenId,
         owner,
         phash,
+        sha256,
         timestamp: new Date()
       });
 
@@ -75,6 +76,7 @@ export async function POST(req) {
       tokenId,
       owner,
       phash,
+      sha256,
       timestamp: new Date()
     });
 

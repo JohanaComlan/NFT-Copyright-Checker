@@ -31,6 +31,7 @@ export async function POST(req) {
         owner: result.owner,
         contract: result.contract,
         tokenId: result.tokenId,
+        sha256: result.sha256,
         timestamp: result.timestamp
       }
     }), { status: 200 });

@@ -4,12 +4,30 @@ import dayjs from "dayjs";
 
 export default function VerificationDetailsPopUp({ open, onClose, data, network = "sepolia" }) {
   const [nftDetail, setNftDetail] = useState(null);
+  const [compareResult, setCompareResult] = useState(null);
 
   useEffect(() => {
     if (open && data?.contract && data?.tokenId) {
       fetchNFTDetail(data.contract, data.tokenId);
+      setCompareResult(null);
     }
   }, [open, data]);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !data?.sha256) return;
+
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+    const localSha256 =
+      "0x" +
+      [...new Uint8Array(hashBuffer)]
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+    const match = localSha256.toLowerCase() === data.sha256.toLowerCase();
+    setCompareResult(match ? "✅ Match" : "❌ Not Match");
+  };
 
   const fetchNFTDetail = async (contract, tokenId) => {
     const api_key = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
@@ -51,51 +69,70 @@ export default function VerificationDetailsPopUp({ open, onClose, data, network 
         <h2 className="text-4xl font-bold text-center mb-8">Verification Details</h2>
 
         {nftDetail ? (
-            <div className="flex justify-center">
-                <div className="flex flex-row gap-6 items-start">
-                <img
-                    src={nftDetail?.image?.cachedUrl}
-                    alt={nftDetail?.name || "NFT Image"}
-                    className="w-48 h-48 object-cover rounded"
-                />
-                <div className="text-left space-y-2 text-base text-gray-700">
-                    <p><strong>Name:</strong> {nftDetail?.name || "Unknown"}</p>
-                    <p><strong>Owner:</strong>{" "}
-                    <CopyableText
-                        shortText={
-                        typeof data?.owner === "string"
-                            ? `${data.owner.slice(0, 6)}...${data.owner.slice(-4)}`
-                            : "N/A"
-                        }
-                        fullText={data?.owner || ""}
+          <div className="flex justify-center">
+            <div className="flex flex-row gap-6 items-start">
+              <img
+                src={nftDetail?.image?.cachedUrl}
+                alt={nftDetail?.name || "NFT Image"}
+                className="w-48 h-48 object-cover rounded"
+              />
+              <div className="text-left space-y-2 text-base text-gray-700">
+                <p><strong>Name:</strong> {nftDetail?.name || "Unknown"}</p>
+                <p><strong>Owner:</strong>{" "}
+                  <CopyableText
+                    shortText={
+                      typeof data?.owner === "string"
+                        ? `${data.owner.slice(0, 6)}...${data.owner.slice(-4)}`
+                        : "N/A"
+                    }
+                    fullText={data?.owner || ""}
+                  />
+                </p>
+                <p><strong>Contract:</strong>{" "}
+                  <CopyableText
+                    shortText={
+                      typeof data?.contract === "string"
+                        ? `${data.contract.slice(0, 6)}...${data.contract.slice(-4)}`
+                        : "N/A"
+                    }
+                    fullText={data?.contract || ""}
+                  />
+                </p>
+                <p><strong>Token ID:</strong>{" "}
+                  <CopyableText
+                    shortText={
+                      typeof data?.tokenId === "string" && data.tokenId.length > 8
+                        ? `${data.tokenId.slice(0, 4)}...${data.tokenId.slice(-4)}`
+                        : data?.tokenId || "N/A"
+                    }
+                    fullText={data?.tokenId || ""}
+                  />
+                </p>
+                <p><strong>Verified Time:</strong> {dayjs(data?.timestamp).format("YYYY-MM-DD HH:mm")}</p>
+
+                {/* Compare Image */}
+                <div className="pt-4 space-y-2">
+                  <label className="block text-sm font-medium">Compare Local Image:</label>
+                  <label className="cursor-pointer inline-block px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium text-gray-700 mb-4">
+                    Choose File
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
                     />
+                  </label>
+                  {compareResult && (
+                    <p className={`font-semibold ${compareResult.includes("Not") ? "text-red-600" : "text-green-600"}`}>
+                      {compareResult}
                     </p>
-                    <p><strong>Contract:</strong>{" "}
-                    <CopyableText
-                        shortText={
-                        typeof data?.contract === "string"
-                            ? `${data.contract.slice(0, 6)}...${data.contract.slice(-4)}`
-                            : "N/A"
-                        }
-                        fullText={data?.contract || ""}
-                    />
-                    </p>
-                    <p><strong>Token ID:</strong>{" "}
-                    <CopyableText
-                        shortText={
-                        typeof data?.tokenId === "string" && data.tokenId.length > 8
-                            ? `${data.tokenId.slice(0, 4)}...${data.tokenId.slice(-4)}`
-                            : data?.tokenId || "N/A"
-                        }
-                        fullText={data?.tokenId || ""}
-                    />
-                    </p>
-                    <p><strong>Verified Time:</strong> {dayjs(data?.timestamp).format("YYYY-MM-DD HH:mm")}</p>
+                  )}
                 </div>
-                </div>
+              </div>
             </div>
-            ) : (
-            <p className="text-gray-500 text-center">Loading NFT details...</p>
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center">Loading NFT details...</p>
         )}
 
 

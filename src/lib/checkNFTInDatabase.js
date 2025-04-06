@@ -1,23 +1,34 @@
 import { generateBlockHash } from "@/lib/generateBlockHash";
 
-export async function checkNFTInDatabase ({ imageUrl, contract, tokenId, owner }){
-        try {
-            const phash = await generateBlockHash(imageUrl); // 前端算出 blockhash
+export async function checkNFTInDatabase({ imageUrl, contract, tokenId, owner }) {
+  try {
+    const phash = await generateBlockHash(imageUrl);
 
-            const res = await fetch("/api/verify-image", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contract, tokenId, owner, phash }),
-            });
+    // 计算 SHA256
+    const resImage = await fetch(imageUrl);
+    const buffer = await resImage.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+    const sha256 =
+      "0x" +
+      [...new Uint8Array(hashBuffer)]
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
 
-            const data = await res.json();
-            return data; // 包含 { success, matched, match?: {...} }
+    // 发给后端
+    const res = await fetch("/api/verify-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contract, tokenId, owner, phash, sha256 }),
+    });
 
-        } catch (err) {
-            console.error("checkNFTInDatabase Error:", err);
-            return { success: false };
-        }
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("checkNFTInDatabase Error:", err);
+    return { success: false };
+  }
 }
+
 
 // 之后配合服务器可用
 // /**
