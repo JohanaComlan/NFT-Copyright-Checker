@@ -6,8 +6,9 @@ import { ethers } from "ethers";
 import VerificationInfoPopUp from "./VerificationInfoPopUp";
 import { handleVerification } from "@/lib/handleVerification";
 import CopyableText from "@/lib/CopyableText";
+import { Home } from "lucide-react";
 
-export default function Home() {
+export default function HomePage() {
   const [searchType, setSearchType] = useState("wallet"); // "wallet" or "collection"
   const [network, setNetwork] = useState("mainnet");
   const [inputValue, setInputValue] = useState("");
@@ -160,13 +161,26 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen">
-      {/* MyNFT 按钮*/}
-      <button
-        onClick={handleMyNFTClick}
-        className="absolute top-10 right-15 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition z-50"
-      >
-        MyNFT
-      </button>
+      {/* Home + MyNFT 按钮 */}
+      <div className="absolute top-10 right-15 flex items-center gap-2 z-50">
+        {/* Home icon 按钮 */}
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-gray-200 border border-gray-300 p-2 rounded-lg hover:bg-gray-100 shadow-sm"
+          title="Go Home"
+        >
+          <Home className="w-5 h-5 text-gray-600" />
+        </button>
+
+        {/* MyNFT 按钮 */}
+        <button
+          onClick={handleMyNFTClick}
+          className="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition"
+        >
+          MyNFT
+        </button>
+      </div>
+
 
       {/* 页面主体内容 */}
       <div className="flex flex-col items-center justify-center py-8 gap-y-3">
