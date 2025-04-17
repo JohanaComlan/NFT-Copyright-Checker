@@ -79,6 +79,15 @@ export const NFTCard = ({ nft, onTestnet} ) => {
         setModalOpen(false); // 控制弹窗关闭
         setSteps([]);        // 重置 steps
     };
+
+    useEffect(() => {
+      const url = nft.image.cachedUrl;
+      console.log("NFT Image URL:", url);
+      if (url.includes("ipfs.io")) {
+      console.warn("⚠️ Using ipfs.io gateway, may fail on macOS. Consider switching.");
+      }
+    }, [nft]);
+
     
     <VerificationInfoPopUp
         open={modalOpen}
