@@ -61,9 +61,36 @@ The application will be available at http://localhost:3000
 
 This repository contains the frontend and API routes used in deployment. For full architectural details, smart contract logic, image hashing algorithms, and verification design, please refer to the accompanying project report.
 
----
 
-## License
+## Project Structure
 
-MIT License
-```
+The project is built using the Next.js framework and follows a modular file structure. Below is a high-level overview of key directories and files:
+
+### `/app`
+Contains all frontend pages, components, and API routes:
+- `/api/` – API endpoints for image upload, verification, metadata generation, and DB access
+  - `/upload-image/` – Handles image uploads to Web3.Storage
+  - `/verify-image/` – Performs hash computation and duplicate detection
+  - `/verified-info/` – Retrieves existing verification info from MongoDB
+  - `/create-metadata-from-ipfs/` – (Optional) Generates and uploads metadata JSON to IPFS
+- Frontend components:
+  - `NFTCard.js`, `UploadForm.js`, `VerificationInfoPopUp.js` – Main UI modules
+  - `UploadNFT.js`, `MintSuccess.js`, `VerifyPage.js` – Page-level views
+  - `globals.css` – Global styling
+
+### `/lib`
+Includes utility logic and helper functions:
+- `web3Uploader.js` – Handles Web3.Storage upload logic
+- `verifyNFT.js`, `checkNFTInDatabase.js`, `handleVerification.js` – Verification logic
+- `useMintNFT.js` – Frontend hook to interact with the minting contract
+- `generateBlockHash.js`, `updateAllSHA256Hashes.js` – Cryptographic utilities
+- `mongodb.js` – MongoDB connection and access
+- `/abi/`, `/contract/` – Store deployed contract addresses and ABI files (not source code)
+
+### Root files
+- `next.config.mjs`, `package.json` – Next.js configuration and dependencies
+- `.env.local` – Environment variables (not included in repo)
+- `README.md` – This documentation file
+
+This structure ensures separation of concerns between frontend views, backend APIs, and blockchain integration logic, making the codebase more maintainable and extensible.
+
