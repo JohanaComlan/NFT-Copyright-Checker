@@ -61,7 +61,7 @@ The application will be available at http://localhost:3000
 
 The project is built using the Next.js framework and follows a modular file structure. Below is a high-level overview of key directories and files:
 
-### `/app`
+### `src/app`
 Contains all frontend pages, components, and API routes:
 - `/api/` – API endpoints for image upload, verification, metadata generation, and DB access
   - `/upload-image/` – Handles image uploads to Web3.Storage
@@ -73,7 +73,7 @@ Contains all frontend pages, components, and API routes:
   - `UploadNFT.js`, `MintSuccess.js`, `VerifyPage.js` – Page-level views
   - `globals.css` – Global styling
 
-### `/lib`
+### `src/lib`
 Includes utility logic and helper functions:
 - `web3Uploader.js` – Handles Web3.Storage upload logic
 - `verifyNFT.js`, `checkNFTInDatabase.js`, `handleVerification.js` – Verification logic
