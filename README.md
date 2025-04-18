@@ -57,11 +57,6 @@ npm run dev
 The application will be available at http://localhost:3000
 
 
-## Notes
-
-This repository contains the frontend and API routes used in deployment. For full architectural details, smart contract logic, image hashing algorithms, and verification design, please refer to the accompanying project report.
-
-
 ## Project Structure
 
 The project is built using the Next.js framework and follows a modular file structure. Below is a high-level overview of key directories and files:
@@ -93,4 +88,6 @@ Includes utility logic and helper functions:
 - `README.md` – This documentation file
 
 This structure ensures separation of concerns between frontend views, backend APIs, and blockchain integration logic, making the codebase more maintainable and extensible.
+
+> Note:This repository contains the frontend and API routes used in deployment. For full architectural details, smart contract logic, image hashing algorithms, and verification design, please refer to the accompanying project report.
 
