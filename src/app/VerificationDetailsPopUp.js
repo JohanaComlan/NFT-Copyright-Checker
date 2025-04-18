@@ -29,6 +29,28 @@ export default function VerificationDetailsPopUp({ open, onClose, data, network 
     setCompareResult(match ? "✅ Match" : "❌ Not Match");
   };
 
+  function getIpfsIoUrl(url) {
+    if (!url) return "";
+  
+    if (url.includes("ipfs.io/ipfs/")) {
+      return url;
+    }
+  
+    return url;
+  }
+
+  function getW3sFallbackUrl(url) {
+    if (!url.includes("ipfs.io/ipfs/")) return url;
+  
+    try {
+      const cid = url.split("ipfs.io/ipfs/")[1].split("/")[0];
+      return `https://${cid}.ipfs.w3s.link`;
+    } catch {
+      return url;
+    }
+  }
+
+  
   const fetchNFTDetail = async (contract, tokenId) => {
     const api_key = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
     const baseURL = `https://eth-${network}.g.alchemy.com/nft/v3/${api_key}/`;
@@ -72,10 +94,14 @@ export default function VerificationDetailsPopUp({ open, onClose, data, network 
           <div className="flex justify-center">
             <div className="flex flex-row gap-6 items-start">
               <img
-                src={nftDetail?.image?.cachedUrl}
+                src={getIpfsIoUrl(nftDetail?.image?.cachedUrl)}
+                onError={(e) => {
+                  e.target.src = getW3sFallbackUrl(nftDetail?.image?.cachedUrl);
+                }}
                 alt={nftDetail?.name || "NFT Image"}
                 className="w-48 h-48 object-cover rounded"
               />
+
               <div className="text-left space-y-2 text-base text-gray-700">
                 <p><strong>Name:</strong> {nftDetail?.name || "Unknown"}</p>
                 <p><strong>Owner:</strong>{" "}
