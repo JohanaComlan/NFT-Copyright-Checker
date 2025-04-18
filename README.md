@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# NFT Copyright Checker
 
-## Getting Started
+A decentralized copyright verification platform for NFTs, built on Ethereum and IPFS. This system allows users to upload digital works, mint them as NFTs, and verify originality using perceptual hashing and blockchain records.
 
-First, run the development server:
+
+## Live Demo
+
+URL: https://nft-copyright-checker.vercel.app/
+
+> Note: While the system has been tested extensively on Windows, some functions (such as file uploads or MetaMask signature requests) may behave inconsistently on macOS or other operating systems due to differences in SSL/HTTPS certificate enforcement across browsers.
+
+
+
+## Local Development Setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-repo/nft-copyright-checker.git
+cd nft-copyright-checker
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+Create a `.env.local` file in the root directory and define the following variables:
+
+```env
+NEXT_PUBLIC_METAMASK_PRIVATE_KEY=your_private_key_here
+NEXT_PUBLIC_W3_PROOF=your_web3storage_proof
+NEXT_PUBLIC_W3_KEY=your_web3storage_api_key
+NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_api_key
+MONGODB_URI=your_mongodb_atlas_uri
+```
+
+#### Reference links for setup:
+- MetaMask Private Key: https://metamask.io/
+- Web3.Storage Keys: https://docs.storacha.network/how-to/upload/
+- Alchemy API Key: https://www.alchemy.com/support/how-to-create-a-new-alchemy-api-key
+- MongoDB URI: https://www.mongodb.com/it-it/cloud/atlas/register
+
+> Important: Do not commit your `.env.local` file or expose private keys in public repositories.
+
+
+
+### 4. Run the project locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application will be available at http://localhost:3000
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Notes
 
-## Learn More
+This repository contains the frontend and API routes used in deployment. For full architectural details, smart contract logic, image hashing algorithms, and verification design, please refer to the accompanying project report.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT License
+```
