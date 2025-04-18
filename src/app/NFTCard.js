@@ -90,13 +90,23 @@ export const NFTCard = ({ nft, onTestnet} ) => {
 
     function getIpfsIoUrl(url) {
       if (!url) return "";
-      const cid = url.includes("ipfs.io") ? url.split("ipfs.io/ipfs/")[1] : url.split("/").pop();
-      return `https://ipfs.io/ipfs/${cid}`;
+    
+      if (url.includes("ipfs.io/ipfs/")) {
+        return url; // 原样保留 ipfs.io 地址
+      }
+
+      return url; // 所有非 ipfs.io 链接原样返回
     }
 
     function getW3sFallbackUrl(url) {
-      const cid = url.includes("ipfs.io") ? url.split("ipfs.io/ipfs/")[1] : url.split("/").pop();
-      return `https://${cid}.ipfs.w3s.link`;
+      if (!url.includes("ipfs.io/ipfs/")) return url;
+    
+      try {
+        const cid = url.split("ipfs.io/ipfs/")[1].split("/")[0];
+        return `https://${cid}.ipfs.w3s.link`;
+      } catch {
+        return url;
+      }
     }
 
 
