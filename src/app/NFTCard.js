@@ -88,21 +88,17 @@ export const NFTCard = ({ nft, onTestnet} ) => {
       }
     }, [nft]);
 
-    function getSafeImageUrl(url) {
+    function getIpfsIoUrl(url) {
       if (!url) return "";
-    
-      if (url.includes("ipfs.io/ipfs/")) {
-        const cid = url.split("ipfs.io/ipfs/")[1].split("/")[0];
-        return `https://${cid}.ipfs.w3s.link`;
-      }
-    
-      if (url.startsWith("ipfs://")) {
-        const cid = url.replace("ipfs://", "").split("/")[0];
-        return `https://${cid}.ipfs.w3s.link`;
-      }
-    
-      return url; // 所有非 IPFS 链接原样返回
+      const cid = url.includes("ipfs.io") ? url.split("ipfs.io/ipfs/")[1] : url.split("/").pop();
+      return `https://ipfs.io/ipfs/${cid}`;
     }
+
+    function getW3sFallbackUrl(url) {
+      const cid = url.includes("ipfs.io") ? url.split("ipfs.io/ipfs/")[1] : url.split("/").pop();
+      return `https://${cid}.ipfs.w3s.link`;
+    }
+
 
 
     
@@ -132,7 +128,10 @@ export const NFTCard = ({ nft, onTestnet} ) => {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                     className="object-cover h-64 w-full rounded-t-md transition-transform duration-300 ease-in-out group-hover:scale-105"
-                    src={getSafeImageUrl(nft.image.cachedUrl)} 
+                    src={getIpfsIoUrl(nft.image.cachedUrl)}                    
+                    onError={(e) => {
+                        e.target.src = getW3sFallbackUrl(nft.image.cachedUrl);
+                    }} 
                     alt={nft.name} 
                 />
                 
